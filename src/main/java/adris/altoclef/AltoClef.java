@@ -285,7 +285,7 @@ public class AltoClef implements ModInitializer {
         // Don't let baritone wait for drops, we handle that ourselves.
         getClientBaritoneSettings().mineDropLoiterDurationMSThanksLouca.value = 0L;
         // Set default block placement penalty to 3 as requested
-        getClientBaritoneSettings().blockPlacementPenalty.value = 3;
+        getClientBaritoneSettings().blockPlacementPenalty.value = 3.0;
 
         // Water bucket placement will be handled by us exclusively
         getExtraBaritoneSettings().configurePlaceBucketButDontFall(true);

@@ -20,7 +20,6 @@ import adris.altoclef.util.helpers.BaritoneHelper;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
-import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -74,13 +73,15 @@ public class TerminatorTask extends Task {
     }
 
     @Override
-    protected void onStart(AltoClef mod) {
+    protected void onStart() {
+        AltoClef mod = AltoClef.getInstance();
         mod.getBehaviour().push();
         mod.getBehaviour().setForceFieldPlayers(true);
     }
 
     @Override
-    protected Task onTick(AltoClef mod) {
+    protected Task onTick() {
+        AltoClef mod = AltoClef.getInstance();
 
         Optional<Entity> closest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), toPunk -> shouldPunk(mod, (PlayerEntity) toPunk), PlayerEntity.class);
 
@@ -91,7 +92,7 @@ public class TerminatorTask extends Task {
 
         if (!isReadyToPunk(mod)) {
 
-            if (_runAwayTask != null && _runAwayTask.isActive() && !_runAwayTask.isFinished(mod)) {
+            if (_runAwayTask != null && _runAwayTask.isActive() && !_runAwayTask.isFinished()) {
                 boolean noneRemote = (closest.isEmpty() || !closest.get().isInRange(mod.getPlayer(), FEAR_DISTANCE));
                 if (_runAwayExtraTime.elapsed() && noneRemote) {
                     Debug.logMessage("Stop running away, we're good.");
@@ -158,19 +159,19 @@ public class TerminatorTask extends Task {
             }
         }
 
-        if (_armorTask != null && _armorTask.isActive() && !_armorTask.isFinished(mod)) {
+        if (_armorTask != null && _armorTask.isActive() && !_armorTask.isFinished()) {
             setDebugState("Collecting Diamond Armor");
             return _armorTask;
         }
 
         if (!mod.getItemStorage().hasItem(Items.DIAMOND_PICKAXE) && mod.getItemStorage().getItemCount(Items.DIAMOND) < 3) {
-            if (!mod.getItemStorage().hasItem(Items.IRON_PICKAXE) || (_prepareDiamondMiningEquipmentTask.isActive() && !_prepareDiamondMiningEquipmentTask.isFinished(mod))) {
+            if (!mod.getItemStorage().hasItem(Items.IRON_PICKAXE) || (_prepareDiamondMiningEquipmentTask.isActive() && !_prepareDiamondMiningEquipmentTask.isFinished())) {
                 setDebugState("Getting iron pickaxes to mine diamonds");
                 return _prepareDiamondMiningEquipmentTask;
             }
         }
 
-        if (StorageHelper.calculateInventoryFoodScore() <= 0 || (_foodTask.isActive() && !_foodTask.isFinished(mod))) {
+        if (StorageHelper.calculateInventoryFoodScore() <= 0 || (_foodTask.isActive() && !_foodTask.isFinished())) {
             setDebugState("Collecting food");
             return _foodTask;
         }
@@ -201,14 +202,15 @@ public class TerminatorTask extends Task {
         _currentVisibleTarget = null;
         if (_scanTask.failedSearch()) {
             Debug.logMessage("Re-searching missed places.");
-            _scanTask.resetSearch(mod);
+            _scanTask.resetSearch();
         }
 
         return _scanTask;
     }
 
     @Override
-    protected void onStop(AltoClef mod, Task interruptTask) {
+    protected void onStop(Task interruptTask) {
+        AltoClef mod = AltoClef.getInstance();
         mod.getBehaviour().pop();
     }
 
@@ -316,7 +318,6 @@ public class TerminatorTask extends Task {
 
         public RunAwayFromPlayersTask(Supplier<List<Entity>> toRunAwayFrom, double distanceToRun) {
             super(toRunAwayFrom, distanceToRun, true, 0.1);
-            _checker = new MovementProgressChecker(2);
         }
 
         @Override

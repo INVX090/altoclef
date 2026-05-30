@@ -104,6 +104,7 @@ public class DeathMenuChain extends TaskChain {
                             }
                         }
                     }
+                    mod.cancelUserTask();
                 } else {
                     // Cancel if we die and are not auto-respawning.
                     mod.cancelUserTask();

@@ -261,11 +261,11 @@ public class AltoClef implements ModInitializer {
         getClientBaritoneSettings().overshootTraverse.value = false;
         getClientBaritoneSettings().allowOvershootDiagonalDescend.value = true;
         getClientBaritoneSettings().allowInventory.value = true;
-        getClientBaritoneSettings().allowParkour.value = false;
-        getClientBaritoneSettings().allowParkourAscend.value = false;
-        getClientBaritoneSettings().allowParkourPlace.value = false;
-        getClientBaritoneSettings().allowDiagonalDescend.value = false;
-        getClientBaritoneSettings().allowDiagonalAscend.value = false;
+        getClientBaritoneSettings().allowParkour.value = true;
+        getClientBaritoneSettings().allowParkourAscend.value = true;
+        getClientBaritoneSettings().allowParkourPlace.value = true;
+        getClientBaritoneSettings().allowDiagonalDescend.value = true;
+        getClientBaritoneSettings().allowDiagonalAscend.value = true;
         getClientBaritoneSettings().blocksToAvoid.value = new LinkedList<>(List.of(Blocks.FLOWERING_AZALEA, Blocks.AZALEA,
                 Blocks.POWDER_SNOW, Blocks.BIG_DRIPLEAF, Blocks.BIG_DRIPLEAF_STEM, Blocks.CAVE_VINES,
                 Blocks.CAVE_VINES_PLANT, Blocks.TWISTING_VINES, Blocks.TWISTING_VINES_PLANT, Blocks.SWEET_BERRY_BUSH,
@@ -284,6 +284,8 @@ public class AltoClef implements ModInitializer {
         getClientBaritoneSettings().mineScanDroppedItems.value = false;
         // Don't let baritone wait for drops, we handle that ourselves.
         getClientBaritoneSettings().mineDropLoiterDurationMSThanksLouca.value = 0L;
+        // Set default block placement penalty to 3 as requested
+        getClientBaritoneSettings().blockPlacementPenalty.value = 3;
 
         // Water bucket placement will be handled by us exclusively
         getExtraBaritoneSettings().configurePlaceBucketButDontFall(true);

@@ -122,6 +122,10 @@ public class Playground {
                 // None specified
                 Debug.logWarning("Please specify a test (ex. stacked, bed, terminate)");
                 break;
+            case "terminate":
+                mod.stopTasks();
+                Debug.logMessage("Terminated all running tasks.");
+                break;
             case "pickup":
                 mod.runUserTask(new PickupDroppedItemTask(new ItemTarget(Items.RAW_IRON, 3), true));
                 break;

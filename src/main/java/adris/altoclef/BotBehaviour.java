@@ -324,18 +324,18 @@ public class BotBehaviour {
             applyState(mod.getClientBaritoneSettings(), mod.getExtraBaritoneSettings());
         }
 
-        /**
-         * Read in a copy of the current state
-         */
-        private void readState(Settings s) {
-            followOffsetDistance = s.followOffsetDistance.value;
-            mineScanDroppedItems = s.mineScanDroppedItems.value;
-            swimThroughLava = s.assumeWalkOnLava.value;
-            allowDiagonalAscend = s.allowDiagonalAscend.value;
-            blockPlacePenalty = s.blockPlacementPenalty.value;
-            blockBreakAdditionalPenalty = s.blockBreakAdditionalPenalty.value;
-            //preferredStairs = s.allowDownward.value;
-        }
+         /**
+          * Read in a copy of the current state
+          */
+         private void readState(Settings s) {
+             followOffsetDistance = s.followOffsetDistance.value;
+             mineScanDroppedItems = s.mineScanDroppedItems.value;
+             swimThroughLava = s.assumeWalkOnLava.value;
+             allowDiagonalAscend = s.allowDiagonalAscend.value;
+             // blockPlacePenalty = s.blockPlacementPenalty.value;
+             blockBreakAdditionalPenalty = s.blockBreakAdditionalPenalty.value;
+             //preferredStairs = s.allowDownward.value;
+         }
 
         private void readExtraState(AltoClefSettings settings) {
             synchronized (settings.getBreakMutex()) {
@@ -366,12 +366,12 @@ public class BotBehaviour {
         /**
          * Make the current state match our copy
          */
-        private void applyState(Settings s, AltoClefSettings sa) {
-            s.followOffsetDistance.value = followOffsetDistance;
-            s.mineScanDroppedItems.value = mineScanDroppedItems;
-            s.allowDiagonalAscend.value = allowDiagonalAscend;
-            s.blockPlacementPenalty.value = blockPlacePenalty;
-            s.blockBreakAdditionalPenalty.value = blockBreakAdditionalPenalty;
+         private void applyState(Settings s, AltoClefSettings sa) {
+             s.followOffsetDistance.value = followOffsetDistance;
+             s.mineScanDroppedItems.value = mineScanDroppedItems;
+             s.allowDiagonalAscend.value = allowDiagonalAscend;
+             // s.blockPlacementPenalty.value = blockPlacePenalty;
+             s.blockBreakAdditionalPenalty.value = blockBreakAdditionalPenalty;
 
             // We need an alternrative method to handle this, this method makes navigation much less reliable.
             //s.allowDownward.value = preferredStairs;

@@ -10,6 +10,7 @@ import adris.altoclef.tasks.container.StoreInAnyContainerTask;
 import adris.altoclef.tasks.entity.KillEntityTask;
 import adris.altoclef.tasks.entity.ShootArrowSimpleProjectileTask;
 import adris.altoclef.tasks.examples.ExampleTask2;
+import adris.altoclef.tasks.stupid.TerminatorTask;
 import adris.altoclef.tasks.misc.EquipArmorTask;
 import adris.altoclef.tasks.misc.PlaceBedAndSetSpawnTask;
 import adris.altoclef.tasks.misc.RavageDesertTemplesTask;
@@ -123,8 +124,7 @@ public class Playground {
                 Debug.logWarning("Please specify a test (ex. stacked, bed, terminate)");
                 break;
             case "terminate":
-                mod.stopTasks();
-                Debug.logMessage("Terminated all running tasks.");
+                mod.runUserTask(new TerminatorTask(mod.getPlayer().getBlockPos(), 900));
                 break;
             case "pickup":
                 mod.runUserTask(new PickupDroppedItemTask(new ItemTarget(Items.RAW_IRON, 3), true));

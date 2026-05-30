@@ -92,11 +92,13 @@ public class TimeoutWanderTask extends Task implements ITaskRequiresGrounded {
 
     private boolean isAnnoying(AltoClef mod, BlockPos pos) {
         for (Block AnnoyingBlocks : annoyingBlocks) {
-            return mod.getWorld().getBlockState(pos).getBlock() == AnnoyingBlocks ||
+            if (mod.getWorld().getBlockState(pos).getBlock() == AnnoyingBlocks ||
                     mod.getWorld().getBlockState(pos).getBlock() instanceof DoorBlock ||
                     mod.getWorld().getBlockState(pos).getBlock() instanceof FenceBlock ||
                     mod.getWorld().getBlockState(pos).getBlock() instanceof FenceGateBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FlowerBlock;
+                    mod.getWorld().getBlockState(pos).getBlock() instanceof FlowerBlock) {
+                return true;
+            }
         }
         return false;
     }

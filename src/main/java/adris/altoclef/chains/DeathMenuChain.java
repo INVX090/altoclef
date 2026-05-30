@@ -104,7 +104,8 @@ public class DeathMenuChain extends TaskChain {
                             }
                         }
                     }
-                    mod.cancelUserTask();
+                    // Task continues after respawn - no cancellation needed.
+                    // The task tree will naturally re-evaluate (e.g. re-gather items if needed).
                 } else {
                     // Cancel if we die and are not auto-respawning.
                     mod.cancelUserTask();

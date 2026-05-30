@@ -295,12 +295,9 @@ public class AltoClef implements ModInitializer {
         getClientBaritoneSettings().randomLooking113.value = 0.0;
 
         // Give baritone more time to calculate paths. Sometimes they can be really far away.
-        // Was: 2000L
-        getClientBaritoneSettings().failureTimeoutMS.reset();
-        // Was: 5000L
-        getClientBaritoneSettings().planAheadFailureTimeoutMS.reset();
-        // Was 100
-        getClientBaritoneSettings().movementTimeoutTicks.reset();
+        getClientBaritoneSettings().failureTimeoutMS.value = 10000L;
+        getClientBaritoneSettings().planAheadFailureTimeoutMS.value = 15000L;
+        getClientBaritoneSettings().movementTimeoutTicks.value = 300;
     }
 
     // List all command sources here.

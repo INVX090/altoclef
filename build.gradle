@@ -135,13 +135,11 @@ dependencies {
     //modImplementation 'baritone-api-fabric:baritone-api-fabric:1.6.3'
     //implementation files('baritone-plus/build/libs/baritone-unoptimized-fabric-1.6.3.jar')
 }
-shadowJar {
-    configurations = [project.configurations.shadow]
-}
-
-remapJar {
-    dependsOn("shadowJar")
-    input.set(shadowJar.archiveFile)
+jar {
+    from {
+        configurations.shadow.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 downgradeJar {

@@ -65,6 +65,10 @@ public abstract class Task {
         first = true;
         active = false;
         stopped = false;
+        if (sub != null) {
+            sub.stop();
+            sub = null;
+        }
     }
 
     public void stop() {

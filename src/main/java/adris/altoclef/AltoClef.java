@@ -517,6 +517,18 @@ public class AltoClef implements ModInitializer {
     }
 
     /**
+     * Cancel current user task and immediately restart it from scratch.
+     * Used after death to clear stale state while keeping the same task.
+     */
+    public void restartUserTask() {
+        Task currentTask = userTaskChain.getCurrentTask();
+        if (currentTask != null) {
+            cancelUserTask();
+            runUserTask(currentTask);
+        }
+    }
+
+    /**
      * Takes control away to eat food
      */
     public FoodChain getFoodChain() {

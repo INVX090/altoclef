@@ -6,6 +6,7 @@ import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.construction.PlaceBlockTask;
 import adris.altoclef.tasks.container.SmeltInFurnaceTask;
 import adris.altoclef.tasks.entity.KillPlayerTask;
+import adris.altoclef.tasks.misc.EquipArmorTask;
 import adris.altoclef.tasks.movement.RunAwayFromEntitiesTask;
 import adris.altoclef.tasks.movement.SearchChunksExploreTask;
 import adris.altoclef.tasks.resources.CollectFoodTask;

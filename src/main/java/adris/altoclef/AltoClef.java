@@ -520,24 +520,22 @@ public class AltoClef implements ModInitializer {
     /**
      * Cancel current user task and immediately restart it from scratch.
      * Used after death to clear stale state while keeping the same task.
-     * Re-parses the original command string to create a fresh Task with clean state.
+     * Executes "stop" then the original command — same as typing @stop;@gamer manually.
      */
     public void restartUserTask() {
         String lastCommand = userTaskChain.getLastUserCommand();
         if (lastCommand != null) {
-            cancelUserTask();
             // Reset all trackers to clear stale entity/block/container state
             trackerManager.resetAll();
-            // Re-execute the original command to create a fresh Task tree
-            getCommandExecutor().execute(lastCommand);
+            // Execute "stop" then re-run the original command.
+            // CommandExecutor supports ";" as separator, so this is equivalent
+            // to typing @stop;@gamer in chat — the cleanest possible restart.
+            String prefix = getModSettings().getCommandPrefix();
+            String stopThenRestart = prefix + "stop;" + lastCommand.substring(prefix.length());
+            getCommandExecutor().execute(stopThenRestart);
         } else {
-            // Fallback: if no command stored (e.g. task started programmatically), try reusing the task
-            Task currentTask = userTaskChain.getCurrentTask();
-            if (currentTask != null) {
-                cancelUserTask();
-                trackerManager.resetAll();
-                runUserTask(currentTask);
-            }
+            // Fallback: if no command stored (e.g. task started programmatically)
+            cancelUserTask();
         }
     }
 

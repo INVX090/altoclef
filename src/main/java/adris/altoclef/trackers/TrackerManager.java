@@ -38,4 +38,12 @@ public class TrackerManager {
         tracker.mod = _mod;
         _trackers.add(tracker);
     }
+
+    public void resetAll() {
+        for (Tracker tracker : _trackers) {
+            tracker.reset();
+        }
+        _mod.getChunkTracker().reset(_mod);
+        _mod.getMiscBlockTracker().reset();
+    }
 }

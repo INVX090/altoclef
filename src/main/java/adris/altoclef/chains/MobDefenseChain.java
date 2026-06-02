@@ -439,6 +439,10 @@ public class MobDefenseChain extends SingleTaskChain {
                             shouldForce = true;
                         }
                     }
+                } else if (entity instanceof PlayerEntity && mod.getBehaviour().shouldForceFieldPlayers()) {
+                    if (LookHelper.seesPlayer(entity, mod.getPlayer(), 10)) {
+                        shouldForce = true;
+                    }
                 } else if (entity instanceof FireballEntity) {
                     // Ghast ball
                     shouldForce = true;

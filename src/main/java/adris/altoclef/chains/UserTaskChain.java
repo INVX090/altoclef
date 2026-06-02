@@ -18,8 +18,18 @@ public class UserTaskChain extends SingleTaskChain {
     private boolean runningIdleTask;
     private boolean nextTaskIdleFlag;
 
+    private String _lastUserCommand = null;
+
     public UserTaskChain(TaskRunner runner) {
         super(runner);
+    }
+
+    public void setLastUserCommand(String command) {
+        _lastUserCommand = command;
+    }
+
+    public String getLastUserCommand() {
+        return _lastUserCommand;
     }
 
     private static String prettyPrintTimeDuration(double seconds) {

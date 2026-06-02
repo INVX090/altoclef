@@ -182,6 +182,7 @@ public class AltoClef implements ModInitializer {
             String line = evt.message;
             if (getCommandExecutor().isClientCommand(line)) {
                 evt.cancel();
+                userTaskChain.setLastUserCommand(line);
                 getCommandExecutor().execute(line);
             }
         });
@@ -519,12 +520,24 @@ public class AltoClef implements ModInitializer {
     /**
      * Cancel current user task and immediately restart it from scratch.
      * Used after death to clear stale state while keeping the same task.
+     * Re-parses the original command string to create a fresh Task with clean state.
      */
     public void restartUserTask() {
-        Task currentTask = userTaskChain.getCurrentTask();
-        if (currentTask != null) {
+        String lastCommand = userTaskChain.getLastUserCommand();
+        if (lastCommand != null) {
             cancelUserTask();
-            runUserTask(currentTask);
+            // Reset all trackers to clear stale entity/block/container state
+            trackerManager.resetAll();
+            // Re-execute the original command to create a fresh Task tree
+            getCommandExecutor().execute(lastCommand);
+        } else {
+            // Fallback: if no command stored (e.g. task started programmatically), try reusing the task
+            Task currentTask = userTaskChain.getCurrentTask();
+            if (currentTask != null) {
+                cancelUserTask();
+                trackerManager.resetAll();
+                runUserTask(currentTask);
+            }
         }
     }
 

@@ -5,8 +5,6 @@ import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.construction.PlaceBlockTask;
 import adris.altoclef.tasks.container.SmeltInFurnaceTask;
-import adris.altoclef.tasks.entity.DoToClosestEntityTask;
-import adris.altoclef.tasks.misc.EquipArmorTask;
 import adris.altoclef.tasks.entity.KillPlayerTask;
 import adris.altoclef.tasks.movement.RunAwayFromEntitiesTask;
 import adris.altoclef.tasks.movement.SearchChunksExploreTask;
@@ -31,6 +29,7 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -45,13 +44,15 @@ public class TerminatorTask extends Task {
     private static final int MIN_BUILDING_BLOCKS = 10;
     private static final int PREFERRED_BUILDING_BLOCKS = 60;
 
+    private static final Random _random = new Random();
+
     private static Item[] GEAR_TO_COLLECT = new Item[]{
-            Items.DIAMOND_PICKAXE, Items.DIAMOND_SHOVEL, Items.DIAMOND_SWORD, Items.WATER_BUCKET
+            Items.DIAMOND_PICKAXE, Items.DIAMOND_SHOVEL, Items.DIAMOND_SWORD, Items.WATER_BUCKET, Items.SHIELD
     };
     private final Task _prepareDiamondMiningEquipmentTask = TaskCatalogue.getSquashedItemTask(
             new ItemTarget(Items.IRON_PICKAXE, 3), new ItemTarget(Items.IRON_SWORD, 1)
     );
-    private final Task _foodTask = new CollectFoodTask(80);
+    private final Task _foodTask = new CollectFoodTask(20);
     private final TimerGame _runAwayExtraTime = new TimerGame(10);
     private final Predicate<PlayerEntity> _canTerminate;
     private final ScanChunksInRadius _scanTask;
@@ -138,24 +139,31 @@ public class TerminatorTask extends Task {
                 return PlaceBlockTask.getMaterialTask(PREFERRED_BUILDING_BLOCKS);
             }
 
-            if ((mod.getPlayer().getHungerManager().getFoodLevel() < (20 - 3 * 2) || mod.getPlayer().getHealth() < 10) && StorageHelper.calculateInventoryFoodScore() <= 0) {
+            if ((mod.getPlayer().getHungerManager().getFoodLevel() < 6 || mod.getPlayer().getHealth() < 8) && StorageHelper.calculateInventoryFoodScore() <= 0) {
                 return _foodTask;
             }
 
             if (mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), toPunk -> shouldPunk(mod, (PlayerEntity) toPunk), PlayerEntity.class).isPresent()) {
-                setDebugState("Punking.");
-                return new DoToClosestEntityTask(
-                    entity -> {
-                        if (entity instanceof PlayerEntity) {
-                            tryDoFunnyMessageTo(mod, (PlayerEntity) entity);
-                            return new KillPlayerTask(entity.getName().getString());
-                        }
-                        Debug.logWarning("This should never happen.");
-                        return _scanTask;
-                    },
-                    interact -> shouldPunk(mod, (PlayerEntity) interact),
-                    PlayerEntity.class
-                );
+                // Pick a random visible player to attack (parallel/random killing)
+                List<PlayerEntity> visiblePlayers;
+                synchronized (BaritoneHelper.MINECRAFT_LOCK) {
+                    visiblePlayers = mod.getEntityTracker().getTrackedEntities(PlayerEntity.class).stream()
+                            .filter(p -> shouldPunk(mod, p) && LookHelper.seesPlayer(mod.getPlayer(), p, 64))
+                            .collect(Collectors.toList());
+                }
+                PlayerEntity target;
+                if (!visiblePlayers.isEmpty()) {
+                    target = visiblePlayers.get(_random.nextInt(visiblePlayers.size()));
+                } else {
+                    // Fallback to closest
+                    target = (PlayerEntity) mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+                            toPunk -> shouldPunk(mod, (PlayerEntity) toPunk), PlayerEntity.class).orElse(null);
+                }
+                if (target != null) {
+                    setDebugState("Punking: " + target.getName().getString());
+                    tryDoFunnyMessageTo(mod, target);
+                    return new KillPlayerTask(target.getName().getString());
+                }
             }
         }
 
@@ -171,7 +179,7 @@ public class TerminatorTask extends Task {
             }
         }
 
-        if (StorageHelper.calculateInventoryFoodScore() <= 0 || (_foodTask.isActive() && !_foodTask.isFinished())) {
+        if (StorageHelper.calculateInventoryFoodScore() <= 0 && (mod.getPlayer().getHungerManager().getFoodLevel() < 10 || mod.getPlayer().getHealth() < 12)) {
             setDebugState("Collecting food");
             return _foodTask;
         }
@@ -226,7 +234,9 @@ public class TerminatorTask extends Task {
 
     private boolean isReadyToPunk(AltoClef mod) {
         if (mod.getPlayer().getHealth() <= 5) return false;
-        return StorageHelper.isArmorEquippedAll(ItemHelper.DIAMOND_ARMORS) && mod.getItemStorage().hasItem(Items.DIAMOND_SWORD);
+        // Ready if we have at least iron armor and any sword (don't wait for full diamond)
+        return (StorageHelper.isArmorEquippedAll(ItemHelper.IRON_ARMORS) || StorageHelper.isArmorEquippedAll(ItemHelper.DIAMOND_ARMORS))
+                && (mod.getItemStorage().hasItem(Items.DIAMOND_SWORD) || mod.getItemStorage().hasItem(Items.IRON_SWORD));
     }
 
     private boolean shouldPunk(AltoClef mod, PlayerEntity player) {

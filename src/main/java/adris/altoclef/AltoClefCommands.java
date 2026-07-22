@@ -35,13 +35,13 @@ public class AltoClefCommands {
                 new MeatCommand(),
                 new ReloadSettingsCommand(),
                 new GamerCommand(),
+                new Gamer2Command(),
                 new MarvionCommand(),
                 new DummyTaskCommand(),
                 new FollowCommand(),
                 new ScanCommand(),
                 new GiveCommand(),
                 new PunkCommand(),
-                new PvPCommand(),
                 new CustomCommand()
         );
     }

@@ -14,6 +14,7 @@ import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.slots.Slot;
 import baritone.api.pathing.goals.GoalRunAway;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.hit.EntityHitResult;
@@ -112,12 +113,13 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
                 mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
             }
 
-            if (mod.getControllerExtras().inRange(entity) && result != null &&
-                    result.getType() == HitResult.Type.ENTITY && !mod.getFoodChain().needsToEat() &&
+            boolean isPlayer = entity instanceof PlayerEntity;
+            boolean canRaycast = isPlayer || (result != null && result.getType() == HitResult.Type.ENTITY);
+            if (mod.getControllerExtras().inRange(entity) && canRaycast &&
+                    !mod.getFoodChain().needsToEat() &&
                     !mod.getMLGBucketChain().isFalling(mod) && mod.getMLGBucketChain().doneMLG() &&
                     !mod.getMLGBucketChain().isChorusFruiting() &&
-                    mod.getClientBaritone().getPathingBehavior().isSafeToCancel() &&
-                    mod.getPlayer().isOnGround()) {
+                    (isPlayer || mod.getClientBaritone().getPathingBehavior().isSafeToCancel())) {
                 progress.reset();
                 return onEntityInteract(mod, entity);
             } else if (!tooClose) {

@@ -7,6 +7,7 @@ import adris.altoclef.multiversion.versionedfields.Entities;
 import adris.altoclef.multiversion.item.ItemVer;
 import adris.altoclef.tasks.construction.ProjectileProtectionWallTask;
 import adris.altoclef.tasks.entity.KillEntitiesTask;
+import adris.altoclef.tasks.entity.KillPlayerTask;
 import adris.altoclef.tasks.movement.CustomBaritoneGoalTask;
 import adris.altoclef.tasks.movement.DodgeProjectilesTask;
 import adris.altoclef.tasks.movement.RunAwayFromCreepersTask;
@@ -65,6 +66,8 @@ public class MobDefenseChain extends SingleTaskChain {
     private float prevHealth = 20;
     private boolean needsChangeOnAttack = false;
     private Entity lockedOnEntity = null;
+
+    private boolean pvpMode = false;
 
     private float cachedLastPriority;
 
@@ -366,7 +369,45 @@ public class MobDefenseChain extends SingleTaskChain {
             lockedOnEntity = null;
         }
 
+        // PvP mode — target nearby players
+        if (pvpMode) {
+            Entity playerTarget = findPvPTarget(mod);
+            if (playerTarget != null) {
+                mod.getBehaviour().setForceFieldPlayers(true);
+                setTask(new KillPlayerTask(playerTarget.getName().getString()));
+                return 75;
+            }
+        }
+
         return 0;
+    }
+
+    public boolean isPvPMode() {
+        return pvpMode;
+    }
+
+    public void setPvPMode(boolean enabled) {
+        this.pvpMode = enabled;
+        if (!enabled) {
+            AltoClef.getInstance().getBehaviour().setForceFieldPlayers(false);
+        }
+    }
+
+    private Entity findPvPTarget(AltoClef mod) {
+        if (mod.getWorld() == null) return null;
+        Entity closest = null;
+        double closestDist = Double.MAX_VALUE;
+        for (PlayerEntity player : mod.getWorld().getPlayers()) {
+            if (player.equals(mod.getPlayer())) continue;
+            if (player.isCreative() || player.isSpectator() || !player.isAlive()) continue;
+            if (!mod.getEntityTracker().isEntityReachable(player)) continue;
+            double dist = player.squaredDistanceTo(mod.getPlayer());
+            if (dist < 900 && dist < closestDist) {
+                closest = player;
+                closestDist = dist;
+            }
+        }
+        return closest;
     }
 
     private static boolean hasShield(AltoClef mod) {
@@ -439,7 +480,7 @@ public class MobDefenseChain extends SingleTaskChain {
                             shouldForce = true;
                         }
                     }
-                } else if (entity instanceof PlayerEntity && mod.getBehaviour().shouldForceFieldPlayers()) {
+                } else if (entity instanceof PlayerEntity && (mod.getBehaviour().shouldForceFieldPlayers() || pvpMode)) {
                     if (LookHelper.seesPlayer(entity, mod.getPlayer(), 10)) {
                         shouldForce = true;
                     }

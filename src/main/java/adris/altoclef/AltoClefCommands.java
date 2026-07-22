@@ -41,6 +41,7 @@ public class AltoClefCommands {
                 new ScanCommand(),
                 new GiveCommand(),
                 new PunkCommand(),
+                new PvPCommand(),
                 new CustomCommand()
         );
     }

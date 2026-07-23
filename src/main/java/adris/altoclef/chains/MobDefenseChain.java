@@ -400,9 +400,10 @@ public class MobDefenseChain extends SingleTaskChain {
         for (PlayerEntity player : mod.getWorld().getPlayers()) {
             if (player.equals(mod.getPlayer())) continue;
             if (player.isCreative() || player.isSpectator() || !player.isAlive()) continue;
+            if (mod.getModSettings().isTerminatorProtectedPlayer(player.getName().getString())) continue;
             if (!mod.getEntityTracker().isEntityReachable(player)) continue;
             double dist = player.squaredDistanceTo(mod.getPlayer());
-            if (dist < 900 && dist < closestDist) {
+            if (dist < 30 * 30 && dist < closestDist) {
                 closest = player;
                 closestDist = dist;
             }

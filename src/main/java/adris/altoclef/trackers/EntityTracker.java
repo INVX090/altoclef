@@ -45,6 +45,10 @@ public class EntityTracker extends Tracker {
     private final HashMap<String, PlayerEntity> playerMap = new HashMap<>();
     private final HashMap<String, Vec3d> playerLastCoordinates = new HashMap<>();
 
+    private static String normalizePlayerName(String name) {
+        return name == null ? "" : name.toLowerCase(Locale.ROOT);
+    }
+
     private final EntityLocateBlacklist entityBlacklist = new EntityLocateBlacklist();
 
     private final HashMap<PlayerEntity, List<Entity>> entitiesCollidingWithPlayerAccumulator = new HashMap<>();
@@ -270,7 +274,7 @@ public class EntityTracker extends Tracker {
     public boolean isPlayerLoaded(String name) {
         ensureUpdated();
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            return playerMap.containsKey(name);
+            return playerMap.containsKey(normalizePlayerName(name));
         }
     }
 
@@ -282,7 +286,7 @@ public class EntityTracker extends Tracker {
     public Optional<Vec3d> getPlayerMostRecentPosition(String name) {
         ensureUpdated();
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            return Optional.ofNullable(playerLastCoordinates.getOrDefault(name, null));
+            return Optional.ofNullable(playerLastCoordinates.get(normalizePlayerName(name)));
         }
     }
 
@@ -294,7 +298,7 @@ public class EntityTracker extends Tracker {
     public Optional<PlayerEntity> getPlayerEntity(String name) {
         if (isPlayerLoaded(name)) {
             synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-                return Optional.of(playerMap.get(name));
+                return Optional.of(playerMap.get(normalizePlayerName(name)));
             }
         }
         return Optional.empty();
@@ -400,7 +404,7 @@ public class EntityTracker extends Tracker {
                         }
                     }
                 } else if (entity instanceof PlayerEntity player) {
-                    String name = player.getName().getString();
+                    String name = normalizePlayerName(player.getName().getString());
                     playerMap.put(name, player);
                     playerLastCoordinates.put(name, player.getPos());
                 }

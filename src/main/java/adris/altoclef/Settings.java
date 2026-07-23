@@ -179,6 +179,15 @@ public class Settings implements IFailableConfigFile {
      */
     private float entityReachRange = 4;
 
+    /** Players that Terminator and automatic PvP must never target. */
+    private List<String> terminatorProtectedPlayers = Collections.emptyList();
+
+    /** Radius used for the bounded search around a player's last known position. */
+    private int playerHuntSearchRadius = 48;
+
+    /** Seconds to search near a last known position before waiting for new information. */
+    private int playerHuntSearchTimeoutSeconds = 30;
+
     /**
      * Before grabbing ANYTHING, get a pickaxe.
      * <p>
@@ -605,6 +614,19 @@ public class Settings implements IFailableConfigFile {
 
     public float getEntityReachRange() {
         return entityReachRange;
+    }
+
+    public boolean isTerminatorProtectedPlayer(String playerName) {
+        return playerName != null && terminatorProtectedPlayers.stream()
+                .anyMatch(name -> name.equalsIgnoreCase(playerName));
+    }
+
+    public int getPlayerHuntSearchRadius() {
+        return Math.max(0, playerHuntSearchRadius);
+    }
+
+    public int getPlayerHuntSearchTimeoutSeconds() {
+        return Math.max(0, playerHuntSearchTimeoutSeconds);
     }
 
     public Item[] getThrowawayItems(boolean includeProtected) {

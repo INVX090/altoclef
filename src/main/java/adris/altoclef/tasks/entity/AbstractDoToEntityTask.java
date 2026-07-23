@@ -133,7 +133,12 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
                 return new GetToEntityTask(entity, maintainDistance);
             }
         }
-        if (BeatMinecraftTask.isTaskRunning(mod,wanderTask)) {
+        return onEntityNotFound(mod);
+    }
+
+    /** Lets specialized entity tasks avoid the default unbounded random search. */
+    protected Task onEntityNotFound(AltoClef mod) {
+        if (BeatMinecraftTask.isTaskRunning(mod, wanderTask)) {
             return wanderTask;
         }
 

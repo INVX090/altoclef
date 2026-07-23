@@ -48,7 +48,7 @@ public class TerminatorTask extends Task {
     private static final Random _random = new Random();
 
     private static Item[] GEAR_TO_COLLECT = new Item[]{
-            Items.DIAMOND_PICKAXE, Items.DIAMOND_SHOVEL, Items.DIAMOND_SWORD, Items.WATER_BUCKET, Items.SHIELD
+            Items.DIAMOND_PICKAXE, Items.DIAMOND_SHOVEL, Items.DIAMOND_SWORD, Items.DIAMOND_AXE, Items.WATER_BUCKET, Items.SHIELD
     };
     private final Task _prepareDiamondMiningEquipmentTask = TaskCatalogue.getSquashedItemTask(
             new ItemTarget(Items.IRON_PICKAXE, 3), new ItemTarget(Items.IRON_SWORD, 1)
@@ -59,9 +59,11 @@ public class TerminatorTask extends Task {
     private final ScanChunksInRadius _scanTask;
     private final TimerGame _funnyMessageTimer = new TimerGame(10);
     private Vec3d _closestPlayerLastPos;
-    private Vec3d _closestPlayerLastObservePos;
+    private Vec3d _closestPlayerPreviousPos;
+    private String _trackedPlayerName;
     private Task _runAwayTask;
     private String _currentVisibleTarget;
+    private String _lockedCombatTarget;
 
     private Task _armorTask;
 
@@ -88,8 +90,15 @@ public class TerminatorTask extends Task {
         Optional<Entity> closest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(), toPunk -> shouldPunk(mod, (PlayerEntity) toPunk), PlayerEntity.class);
 
         if (closest.isPresent()) {
-            _closestPlayerLastPos = closest.get().getPos();
-            _closestPlayerLastObservePos = mod.getPlayer().getPos();
+            PlayerEntity observed = (PlayerEntity) closest.get();
+            String observedName = observed.getName().getString();
+            if (_trackedPlayerName != null && _trackedPlayerName.equalsIgnoreCase(observedName)) {
+                _closestPlayerPreviousPos = _closestPlayerLastPos;
+            } else {
+                _closestPlayerPreviousPos = null;
+                _trackedPlayerName = observedName;
+            }
+            _closestPlayerLastPos = observed.getPos();
         }
 
         if (!isReadyToPunk(mod)) {
@@ -152,18 +161,23 @@ public class TerminatorTask extends Task {
                             .filter(p -> shouldPunk(mod, p) && LookHelper.seesPlayer(mod.getPlayer(), p, 64))
                             .collect(Collectors.toList());
                 }
-                PlayerEntity target;
-                if (!visiblePlayers.isEmpty()) {
+                PlayerEntity target = visiblePlayers.stream()
+                        .filter(player -> _lockedCombatTarget != null
+                                && player.getName().getString().equalsIgnoreCase(_lockedCombatTarget))
+                        .findFirst()
+                        .orElse(null);
+                if (target == null && !visiblePlayers.isEmpty()) {
                     target = visiblePlayers.get(_random.nextInt(visiblePlayers.size()));
-                } else {
-                    // Fallback to closest
+                }
+                if (target == null) {
                     target = (PlayerEntity) mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
                             toPunk -> shouldPunk(mod, (PlayerEntity) toPunk), PlayerEntity.class).orElse(null);
                 }
                 if (target != null) {
-                    setDebugState("Punking: " + target.getName().getString());
+                    _lockedCombatTarget = target.getName().getString();
+                    setDebugState("Punking: " + _lockedCombatTarget);
                     tryDoFunnyMessageTo(mod, target);
-                    return new KillPlayerTask(target.getName().getString());
+                    return new KillPlayerTask(_lockedCombatTarget);
                 }
             }
         }
@@ -241,9 +255,10 @@ public class TerminatorTask extends Task {
     }
 
     private boolean shouldPunk(AltoClef mod, PlayerEntity player) {
-        if (player == null || player.isDead()) return false;
+        if (player == null || player.equals(mod.getPlayer()) || !player.isAlive() || player.isDead()) return false;
         if (player.isCreative() || player.isSpectator()) return false;
-        return !mod.getButler().isUserAuthorized(player.getName().getString()) && _canTerminate.test(player);
+        if (mod.getModSettings().isTerminatorProtectedPlayer(player.getName().getString())) return false;
+        return _canTerminate.test(player);
     }
 
     private void tryDoFunnyMessageTo(AltoClef mod, PlayerEntity player) {
@@ -294,7 +309,10 @@ public class TerminatorTask extends Task {
                     double distanceSq = (cx - px) * (cx - px) + (cz - pz) * (cz - pz);
                     double pdx = _closestPlayerLastPos.getX() - cx, pdz = _closestPlayerLastPos.getZ() - cz;
                     double distanceToLastPlayerPos = pdx * pdx + pdz * pdz;
-                    Vec3d direction = _closestPlayerLastPos.subtract(_closestPlayerLastObservePos).multiply(1, 0, 1).normalize();
+                    Vec3d movement = _closestPlayerPreviousPos == null
+                            ? Vec3d.ZERO
+                            : _closestPlayerLastPos.subtract(_closestPlayerPreviousPos).multiply(1, 0, 1);
+                    Vec3d direction = movement.lengthSquared() < 0.001 ? Vec3d.ZERO : movement.normalize();
                     double dirx = direction.x, dirz = direction.z;
                     double correctDistance = pdx * dirx + pdz * dirz;
                     double tempX = dirx * correctDistance,

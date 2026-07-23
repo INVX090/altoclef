@@ -110,7 +110,7 @@ public interface WorldHelper {
         return inRangeXZ(entity, to.getPos(), range);
     }
 
-    static Dimension getCurrentDimension() {
+    public static Dimension getCurrentDimension() {
         ClientWorld world = MinecraftClient.getInstance().world;
         if (world == null) return Dimension.OVERWORLD;
         if (world.getDimension().ultrawarm()) return Dimension.NETHER;

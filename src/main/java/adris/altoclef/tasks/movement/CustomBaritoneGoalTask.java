@@ -64,14 +64,13 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
     }
 
     private boolean isAnnoying(AltoClef mod, BlockPos pos) {
-        for (Block AnnoyingBlocks : annoyingBlocks) {
-            if (mod.getWorld().getBlockState(pos).getBlock() == AnnoyingBlocks ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof DoorBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FenceBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FenceGateBlock ||
-                    mod.getWorld().getBlockState(pos).getBlock() instanceof FlowerBlock) {
-                return true;
-            }
+        Block block = mod.getWorld().getBlockState(pos).getBlock();
+        if (block instanceof DoorBlock || block instanceof FenceBlock
+                || block instanceof FenceGateBlock || block instanceof FlowerBlock) {
+            return true;
+        }
+        for (Block annoyingBlock : annoyingBlocks) {
+            if (block == annoyingBlock) return true;
         }
         return false;
     }

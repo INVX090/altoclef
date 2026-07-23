@@ -5,6 +5,7 @@ import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.TaskChain;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.helpers.ItemHelper;
+import adris.altoclef.ui.AltoClefControlScreen;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
@@ -178,7 +179,8 @@ public class PlayerInteractionFixChain extends TaskChain {
             mouseMovingButScreenOpenTimeout.reset();
         }
         // We're in the player screen/a screen we DON'T want to cancel out of
-        if (openScreen == null || openScreen instanceof ChatScreen || openScreen instanceof GameMenuScreen || openScreen instanceof DeathScreen) {
+        if (openScreen == null || openScreen instanceof ChatScreen || openScreen instanceof GameMenuScreen
+                || openScreen instanceof DeathScreen || openScreen instanceof AltoClefControlScreen) {
             mouseMovingButScreenOpenTimeout.reset();
             return false;
         }

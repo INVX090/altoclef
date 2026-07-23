@@ -68,12 +68,12 @@ public class CommandStatusOverlay {
                 x += addX;
                 y += addY;
 
-                context.drawText(renderer, " (Paused)", x, y, Color.LIGHT_GRAY.getRGB(), true);
+                context.drawText(renderer, "（已暂停）", x, y, Color.LIGHT_GRAY.getRGB(), true);
                 renderTask(mod.getStoredTask(), context, renderer, x+addX*2, y+addY);
                 return;
             }
             if (mod.getTaskRunner().isActive()) {
-                context.drawText(renderer, " (no task running) ", x, y, whiteColor, true);
+                context.drawText(renderer, "（当前没有任务）", x, y, whiteColor, true);
             }
             if (lastTime + 10000 < Instant.now().toEpochMilli() && mod.getModSettings().shouldShowTimer()) {//if it doesn't run any task in 10 secs
                 runningSince = Instant.now().toEpochMilli();//reset the timer

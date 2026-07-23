@@ -464,6 +464,10 @@ public class Settings implements IFailableConfigFile {
         return showTaskChains;
     }
 
+    public void setShowTaskChains(boolean showTaskChains) {
+        this.showTaskChains = showTaskChains;
+    }
+
     public boolean shouldShowDebugTickMs() {
         return showDebugTickMs;
     }
@@ -520,8 +524,16 @@ public class Settings implements IFailableConfigFile {
         return mobDefense;
     }
 
+    public void setMobDefense(boolean mobDefense) {
+        this.mobDefense = mobDefense;
+    }
+
     public boolean isDodgeProjectiles() {
         return dodgeProjectiles;
+    }
+
+    public void setDodgeProjectiles(boolean dodgeProjectiles) {
+        this.dodgeProjectiles = dodgeProjectiles;
     }
 
     public boolean isAutoEat() {
@@ -625,8 +637,16 @@ public class Settings implements IFailableConfigFile {
         return Math.max(0, playerHuntSearchRadius);
     }
 
+    public void setPlayerHuntSearchRadius(int playerHuntSearchRadius) {
+        this.playerHuntSearchRadius = Math.max(0, playerHuntSearchRadius);
+    }
+
     public int getPlayerHuntSearchTimeoutSeconds() {
         return Math.max(0, playerHuntSearchTimeoutSeconds);
+    }
+
+    public void setPlayerHuntSearchTimeoutSeconds(int playerHuntSearchTimeoutSeconds) {
+        this.playerHuntSearchTimeoutSeconds = Math.max(0, playerHuntSearchTimeoutSeconds);
     }
 
     public Item[] getThrowawayItems(boolean includeProtected) {

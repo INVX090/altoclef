@@ -60,6 +60,7 @@
 |---------|----------|
 | `@help` | Список всех команд |
 | `@gamer` | Бот пытается побить игру |
+| `@gamer2` | Побить игру + PvP режим (авто-атака игроков рядом) |
 | `@get <предмет> <кол-во>` | Собрать предмет |
 | `@goto <x> <y> <z>` | Идти к координатам |
 | `@follow <игрок>` | Следовать за игроком |
@@ -99,6 +100,76 @@ cd altoclef
 ```
 
 Готовый `.jar` появится в `versions/1.21.1/build/libs/`.
+
+## Инструкция для разработчика (рабочая)
+
+> Эта секция — памятка для будущих сборок и доработок. Не удалять.
+
+### Стек
+
+- Minecraft **1.21.1**, Fabric Loader `0.16.2`
+- **JDK 21** (обязателен: `options.release = 21`)
+- **Gradle 8.8** (wrapper), **Loom 1.7-SNAPSHOT**
+- **Preprocess** plugin `com.replaymod.preprocess:c2041a3` (мультиверсия через `#if MC >= ...`)
+- Baritone (`cabaletta:baritone-unoptimized-fabric:1.21.1`)
+- Версия мода: `mod_version=0.19` в `gradle.properties`
+
+### Сборка на CI (рекомендуемый путь)
+
+Локальная сборка на Windows может падать (Loom/ZipFS). Рабочий путь — GitHub Actions:
+
+```powershell
+# 1. Коммит и пуш
+git add -A
+git commit -m "feat: ..."
+git push origin main
+
+# 2. CI соберёт :1.21.1:build (~3 мин)
+#    Смотреть: github.com/INVX090/altoclef/actions
+
+# 3. Скачать артефакт (jar упадёт в корень репо)
+cd E:\altocleaf\altoclef-fork
+gh run list --limit 1
+gh run download <RUN_ID> --name altoclef-mod
+
+# 4. Положить в папку модов
+Copy-Item "altoclef-1.21.1-0.19.jar" "C:\Users\invx0\AppData\Roaming\.minecraft\mods\" -Force
+```
+
+### Локальная сборка (Windows)
+
+```powershell
+# Нужен JDK 21 в JAVA_HOME (сейчас его НЕТ, только JDK 8 и 17)
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+.\gradlew.bat :1.21.1:build --no-daemon
+```
+
+### PvP режим (как работает)
+
+- `@gamer2` = `Gamer2Command` → `BeatMinecraftTask` + `mobDefenseChain.setPvPMode(true)`
+- `MobDefenseChain.findPvPTarget()` ищет ближайшего живого игрока (не креатив/спектатор, не сам бот) в **30 блоках**
+- При обнаружении возвращает **priority 75** → прерывает текущую задачу → `KillPlayerTask`
+- Когда игрок мёртв/вышел из зоны → priority падает → бот возвращается к задаче
+- `doForceField()` автоматически добавляет игроков в KillAura (авто-атака на бегу)
+
+### Ключевые файлы
+
+| Файл | Роль |
+|------|------|
+| `src/.../chains/MobDefenseChain.java` | PvP-детекция, приоритеты, force field |
+| `src/.../tasks/entity/KillPlayerTask.java` | Преследование конкретного игрока |
+| `src/.../tasks/entity/AbstractKillEntityTask.java` | Механика атаки (кулдаун ≥ 0.8, без isOnGround) |
+| `src/.../tasks/entity/AbstractDoToEntityTask.java` | Сближение; для PlayerEntity без raycast/isOnGround |
+| `src/.../control/KillAura.java` | Авто-атака, щит, выбор оружия |
+| `src/.../commands/Gamer2Command.java` | Команда `@gamer2` |
+
+### Известные недоработки PvP
+
+- KillAura поднимает щит вместо атаки против игроков (исключение PlayerEntity не добавлено)
+- `findPvPTarget` не проверяет линию видимости (LOS) — бот бежит сквозь стены
+- Нет проверки `hurtTime` (атака в инвулнерабельность впустую)
+- Нет strafe-движения, ломания щитов противника, дальнего боя (лук)
+- Нет hysteresis: игрок на границе 30 блоков вызывает дёрганье задача↔PvP
 
 ## Оригинал
 

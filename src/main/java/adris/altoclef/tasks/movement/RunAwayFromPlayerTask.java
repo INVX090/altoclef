@@ -48,7 +48,7 @@ public class RunAwayFromPlayerTask extends CustomBaritoneGoalTask {
         @Override
         protected List<Entity> getEntities(AltoClef mod) {
             synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-                return mod.getWorld().getPlayers().stream()
+                return mod.getEntityTracker().getLoadedPlayers().stream()
                         .filter(player -> !player.equals(mod.getPlayer()) && player.isAlive())
                         .collect(Collectors.toList());
             }

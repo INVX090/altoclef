@@ -268,7 +268,14 @@ public class MobDefenseChain extends SingleTaskChain {
         // Dodge all mobs cause we boutta die son
         if (isInDanger(mod) && !escapeDragonBreath(mod) && !mod.getFoodChain().isShouldStop()) {
             if (targetEntity == null || WorldHelper.isSurroundedByHostiles()) {
-                runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+                if (pvpMode && findPvPTarget(mod) != null) {
+                    // Low HP in PvP — run away from the player, just like from mobs.
+                    mod.getBehaviour().setForceFieldPlayers(false);
+                    stopShielding(mod);
+                    runAwayTask = new RunAwayFromPlayerTask(DANGER_KEEP_DISTANCE);
+                } else {
+                    runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+                }
                 setTask(runAwayTask);
                 return 70;
             }

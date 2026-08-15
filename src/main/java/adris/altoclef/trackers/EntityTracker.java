@@ -263,6 +263,16 @@ public class EntityTracker extends Tracker {
     }
 
     /**
+     * Gets all players that are currently loaded (excluding ourselves).
+     */
+    public List<PlayerEntity> getLoadedPlayers() {
+        ensureUpdated();
+        synchronized (BaritoneHelper.MINECRAFT_LOCK) {
+            return new ArrayList<>(playerMap.values());
+        }
+    }
+
+    /**
      * Is a player loaded/within render distance?
      *
      * @param name Username on a multiplayer server

@@ -126,8 +126,11 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
                 setDebugState("Approaching target");
                 if (!progress.check(mod)) {
                     progress.reset();
-                    Debug.logMessage("Failed to get to target, blacklisting.");
-                    mod.getEntityTracker().requestEntityUnreachable(entity);
+                    // Players move around, don't blacklist them as unreachable.
+                    if (!(entity instanceof PlayerEntity)) {
+                        Debug.logMessage("Failed to get to target, blacklisting.");
+                        mod.getEntityTracker().requestEntityUnreachable(entity);
+                    }
                 }
                 // Move to target
                 return new GetToEntityTask(entity, maintainDistance);

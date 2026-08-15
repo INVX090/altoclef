@@ -12,6 +12,7 @@ import adris.altoclef.tasks.movement.CustomBaritoneGoalTask;
 import adris.altoclef.tasks.movement.DodgeProjectilesTask;
 import adris.altoclef.tasks.movement.RunAwayFromCreepersTask;
 import adris.altoclef.tasks.movement.RunAwayFromHostilesTask;
+import adris.altoclef.tasks.movement.RunAwayFromPlayerTask;
 import adris.altoclef.tasks.speedrun.DragonBreathTracker;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.baritone.CachedProjectile;
@@ -53,6 +54,7 @@ public class MobDefenseChain extends SingleTaskChain {
     private static final double ARROW_KEEP_DISTANCE_HORIZONTAL = 2;
     private static final double ARROW_KEEP_DISTANCE_VERTICAL = 10;
     private static final double SAFE_KEEP_DISTANCE = 8;
+    private static final float PVP_FLEE_AT_HEALTH = 8;
     private static final List<Class<? extends Entity>> ignoredMobs = List.of(Entities.WARDEN, WitherEntity.class, EndermanEntity.class, BlazeEntity.class,
             WitherSkeletonEntity.class, HoglinEntity.class, ZoglinEntity.class, PiglinBruteEntity.class, VindicatorEntity.class, MagmaCubeEntity.class);
 
@@ -373,6 +375,29 @@ public class MobDefenseChain extends SingleTaskChain {
         if (pvpMode) {
             Entity playerTarget = findPvPTarget(mod);
             if (playerTarget != null) {
+                FoodChain foodChain = mod.getFoodChain();
+
+                // Low HP — run away from the player, just like from mobs.
+                if (mod.getPlayer().getHealth() <= PVP_FLEE_AT_HEALTH) {
+                    mod.getBehaviour().setForceFieldPlayers(false);
+                    stopShielding(mod);
+                    runAwayTask = new RunAwayFromPlayerTask(DANGER_KEEP_DISTANCE);
+                    setTask(runAwayTask);
+                    return 70;
+                }
+
+                // No food and hungry — let FoodChain collect food before fighting.
+                if (!foodChain.hasFood() && mod.getPlayer().getHungerManager().getFoodLevel() <= 10) {
+                    mod.getBehaviour().setForceFieldPlayers(false);
+                    return Float.NEGATIVE_INFINITY;
+                }
+
+                // Need to eat — stop chasing so the bot can eat where it stands.
+                if (foodChain.needsToEat()) {
+                    mod.getBehaviour().setForceFieldPlayers(false);
+                    return Float.NEGATIVE_INFINITY;
+                }
+
                 mod.getBehaviour().setForceFieldPlayers(true);
                 setTask(new KillPlayerTask(playerTarget.getName().getString()));
                 return 75;

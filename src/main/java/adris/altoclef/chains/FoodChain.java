@@ -167,13 +167,14 @@ public class FoodChain extends SingleTaskChain {
 
         Settings settings = mod.getModSettings();
 
-        if (needsFood || cachedFoodScore < settings.getMinimumFoodAllowed()) {
+        // Collect food if we have less than the minimum allowed, or none at all.
+        if (needsFood || cachedFoodScore < settings.getMinimumFoodAllowed() || !hasFood) {
             needsFood = cachedFoodScore < settings.getFoodUnitsToCollect();
 
             // Only collect if we don't have enough food.
             // If the user inputs invalid settings, the bot would get stuck here.
-            if (cachedFoodScore < settings.getFoodUnitsToCollect()) {
-                setTask(new CollectFoodTask(settings.getFoodUnitsToCollect()));
+            if (cachedFoodScore < settings.getFoodUnitsToCollect() || !hasFood) {
+                setTask(new CollectFoodTask(Math.max(settings.getFoodUnitsToCollect(), 8)));
                 return 55f;
             }
         }

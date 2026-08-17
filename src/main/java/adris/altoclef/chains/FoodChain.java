@@ -167,13 +167,17 @@ public class FoodChain extends SingleTaskChain {
 
         Settings settings = mod.getModSettings();
 
-        // Collect food if we have less than the minimum allowed, or none at all.
-        if (needsFood || cachedFoodScore < settings.getMinimumFoodAllowed() || !hasFood) {
+        // Collect food if we have less than the minimum allowed, or none at all while in a
+        // critical state (low HP / starving) so we can heal. Otherwise don't interrupt the
+        // main flow — food is gathered in parallel by BeatMinecraft tasks.
+        boolean criticalNoFood = !hasFood && (mod.getPlayer().getHealth() <= 12
+                || mod.getPlayer().getHungerManager().getFoodLevel() <= 10);
+        if (needsFood || cachedFoodScore < settings.getMinimumFoodAllowed() || criticalNoFood) {
             needsFood = cachedFoodScore < settings.getFoodUnitsToCollect();
 
             // Only collect if we don't have enough food.
             // If the user inputs invalid settings, the bot would get stuck here.
-            if (cachedFoodScore < settings.getFoodUnitsToCollect() || !hasFood) {
+            if (cachedFoodScore < settings.getFoodUnitsToCollect() || criticalNoFood) {
                 setTask(new CollectFoodTask(Math.max(settings.getFoodUnitsToCollect(), 8)));
                 return 55f;
             }

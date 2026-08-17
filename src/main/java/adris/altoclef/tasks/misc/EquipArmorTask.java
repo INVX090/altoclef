@@ -52,6 +52,9 @@ public class EquipArmorTask extends Task {
 
         // Now equip
         for (ItemTarget targetArmor : toEquip) {
+            // Already wearing an equivalent piece — don't try to equip another copy on top.
+            if (StorageHelper.isArmorEquipped(targetArmor.getMatches())) continue;
+
             Item[] targetArmorMatches = targetArmor.getMatches();
             if (Arrays.stream(targetArmorMatches).toList().contains(Items.SHIELD)) {
                 ShieldItem shield = (ShieldItem) Objects.requireNonNull(targetArmor.getMatches())[0];

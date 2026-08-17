@@ -77,6 +77,11 @@ public class MoveItemToSlotTask extends Task {
             }
 
             int currentlyPlaced = Arrays.asList(validItems).contains(atTarget.getItem()) ? atTarget.getCount() : 0;
+            if (currentlyPlaced >= toMove.getTargetCount()) {
+                // Destination is already satisfied — don't loop clicking on it.
+                this.stop();
+                return null;
+            }
             if (currentHeld.getCount() + currentlyPlaced <= toMove.getTargetCount()) {
                 // Just place all of 'em
                 mod.getSlotHandler().clickSlot(destination, 0, SlotActionType.PICKUP);

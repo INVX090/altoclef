@@ -66,6 +66,11 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
         // Get closest object
         Optional<T> checkNewClosest = getClosestTo(mod, getOriginPos(mod));
 
+        // If the closest object isn't valid (e.g. blacklisted), treat it as absent so we don't loop on it.
+        if (checkNewClosest.isPresent() && !isValid(mod, checkNewClosest.get())) {
+            checkNewClosest = Optional.empty();
+        }
+
         // Receive closest object and position
         if (checkNewClosest.isPresent() && !checkNewClosest.get().equals(currentlyPursuing)) {
             T newClosest = checkNewClosest.get();
@@ -87,23 +92,30 @@ public abstract class AbstractDoToClosestObjectTask<T> extends Task {
                     h.updateHeuristic(currentHeuristic);
                     h.updateDistance(closestDistanceSqr);
                     h.setTickAttempted(lastTick);
-                    if (heuristicMap.containsKey(newClosest)) {
-                        // Our new object has a past potential heuristic calculated, if it's better try it out.
-                        CachedHeuristic maybeReAttempt = heuristicMap.get(newClosest);
-                        double maybeClosestDistance = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getPos());
-                        // Get considerably closer (divide distance by 2)
-                        if (maybeReAttempt.getHeuristicValue() < h.getHeuristicValue() || maybeClosestDistance < maybeReAttempt.getClosestDistanceSqr() / 4) {
-                            setDebugState("Retrying old heuristic!");
-                            // The currently closest previously calculated heuristic is better, move towards it!
+                    // Only switch to a new target if it's significantly closer (avoids oscillating
+                    // between equidistant targets), or if the current pursuit is stalled (no path).
+                    double newClosestDistanceSqr = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getPos());
+                    boolean significantlyCloser = newClosestDistanceSqr < closestDistanceSqr * 0.5;
+                    boolean currentStalled = currentHeuristic == Double.POSITIVE_INFINITY;
+                    if (significantlyCloser || currentStalled) {
+                        if (heuristicMap.containsKey(newClosest)) {
+                            // Our new object has a past potential heuristic calculated, if it's better try it out.
+                            CachedHeuristic maybeReAttempt = heuristicMap.get(newClosest);
+                            double maybeClosestDistance = getPos(mod, newClosest).squaredDistanceTo(mod.getPlayer().getPos());
+                            // Get considerably closer (divide distance by 2)
+                            if (maybeReAttempt.getHeuristicValue() < h.getHeuristicValue() || maybeClosestDistance < maybeReAttempt.getClosestDistanceSqr() / 4) {
+                                setDebugState("Retrying old heuristic!");
+                                // The currently closest previously calculated heuristic is better, move towards it!
+                                currentlyPursuing = newClosest;
+                                // In theory, this next line shouldn't need to be run,
+                                // but it's CRITICAL to making this work for some reason
+                                maybeReAttempt.updateDistance(maybeClosestDistance);
+                            }
+                        } else {
+                            setDebugState("Trying out NEW pursuit");
+                            // Our new object does not have a heuristic, TRY IT OUT!
                             currentlyPursuing = newClosest;
-                            // In theory, this next line shouldn't need to be run,
-                            // but it's CRITICAL to making this work for some reason
-                            maybeReAttempt.updateDistance(maybeClosestDistance);
                         }
-                    } else {
-                        setDebugState("Trying out NEW pursuit");
-                        // Our new object does not have a heuristic, TRY IT OUT!
-                        currentlyPursuing = newClosest;
                     }
                 } else {
                     setDebugState("Waiting for move task to kick in...");

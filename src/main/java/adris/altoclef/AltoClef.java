@@ -26,8 +26,10 @@ import adris.altoclef.ui.AltoClefTickChart;
 import adris.altoclef.ui.CommandStatusOverlay;
 import adris.altoclef.ui.MessagePriority;
 import adris.altoclef.ui.MessageSender;
+import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.InputHelper;
 import adris.altoclef.util.helpers.StorageHelper;
+import adris.altoclef.util.helpers.WorldHelper;
 import baritone.Baritone;
 import baritone.altoclef.AltoClefSettings;
 import baritone.api.BaritoneAPI;
@@ -63,6 +65,7 @@ public class AltoClef implements ModInitializer {
     private FoodChain foodChain;
     private MobDefenseChain mobDefenseChain;
     private MLGBucketFallChain mlgBucketChain;
+    private Dimension lastDimension = null;
     // Trackers
     private ItemStorageTracker storageTracker;
     private ContainerSubTracker containerSubTracker;
@@ -215,6 +218,13 @@ public class AltoClef implements ModInitializer {
 
         inputControls.onTickPre();
 
+        // Parkour is dangerous in the Nether/End (cliffs, lava, void) — disable it there.
+        Dimension currentDimension = WorldHelper.getCurrentDimension();
+        if (currentDimension != lastDimension) {
+            lastDimension = currentDimension;
+            updateParkourSettingsForDimension(currentDimension);
+        }
+
         // Cancel shortcut
         if (InputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) && InputHelper.isKeyPressed(GLFW.GLFW_KEY_K)) {
             stopTasks();
@@ -254,6 +264,13 @@ public class AltoClef implements ModInitializer {
         if (settings.shouldShowDebugTickMs()) {
             altoClefTickChart.render(this, context, 1, context.getScaledWindowWidth() / 2 - 124);
         }
+    }
+
+    private void updateParkourSettingsForDimension(Dimension dimension) {
+        boolean parkourEnabled = dimension == Dimension.OVERWORLD;
+        getClientBaritoneSettings().allowParkour.value = parkourEnabled;
+        getClientBaritoneSettings().allowParkourAscend.value = parkourEnabled;
+        getClientBaritoneSettings().allowParkourPlace.value = parkourEnabled;
     }
 
     private void initializeBaritoneSettings() {

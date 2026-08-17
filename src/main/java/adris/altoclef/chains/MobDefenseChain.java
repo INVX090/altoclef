@@ -55,6 +55,8 @@ public class MobDefenseChain extends SingleTaskChain {
     private static final double ARROW_KEEP_DISTANCE_VERTICAL = 10;
     private static final double SAFE_KEEP_DISTANCE = 8;
     private static final float PVP_FLEE_AT_HEALTH = 8;
+    // If we're out of food, don't flee forever — after this many ticks give up and go collect food instead.
+    private static final int FLEE_FOR_FOOD_TIMEOUT_TICKS = 400;
     private static final List<Class<? extends Entity>> ignoredMobs = List.of(Entities.WARDEN, WitherEntity.class, EndermanEntity.class, BlazeEntity.class,
             WitherSkeletonEntity.class, HoglinEntity.class, ZoglinEntity.class, PiglinBruteEntity.class, VindicatorEntity.class, MagmaCubeEntity.class);
 
@@ -67,6 +69,7 @@ public class MobDefenseChain extends SingleTaskChain {
     private CustomBaritoneGoalTask runAwayTask;
     private float prevHealth = 20;
     private boolean needsChangeOnAttack = false;
+    private int fleeStartTick = -1;
     private Entity lockedOnEntity = null;
 
     private boolean pvpMode = false;
@@ -268,6 +271,19 @@ public class MobDefenseChain extends SingleTaskChain {
         // Dodge all mobs cause we boutta die son
         if (isInDanger(mod) && !escapeDragonBreath(mod) && !mod.getFoodChain().isShouldStop()) {
             if (targetEntity == null || WorldHelper.isSurroundedByHostiles()) {
+                boolean noFood = !mod.getFoodChain().hasFood();
+                // Out of food and already fled long enough — stop fleeing and let FoodChain collect food.
+                if (noFood && fleeStartTick != -1 && WorldHelper.getTicks() - fleeStartTick > FLEE_FOR_FOOD_TIMEOUT_TICKS) {
+                    killAura.stopShielding(mod);
+                    stopShielding(mod);
+                    mod.getBehaviour().setForceFieldPlayers(false);
+                    return Float.NEGATIVE_INFINITY;
+                }
+                if (noFood && fleeStartTick == -1) {
+                    fleeStartTick = WorldHelper.getTicks();
+                } else if (!noFood) {
+                    fleeStartTick = -1;
+                }
                 if (pvpMode && findPvPTarget(mod) != null) {
                     // Low HP in PvP — run away from the player, just like from mobs.
                     mod.getBehaviour().setForceFieldPlayers(false);
@@ -364,10 +380,27 @@ public class MobDefenseChain extends SingleTaskChain {
         // By default, if we aren't "immediately" in danger but were running away, keep
         // running away until we're good.
         if (runAwayTask != null && !runAwayTask.isFinished()) {
+            // Out of food and already fled long enough — stop fleeing and let FoodChain collect food.
+            if (!mod.getFoodChain().hasFood() && fleeStartTick != -1
+                    && WorldHelper.getTicks() - fleeStartTick > FLEE_FOR_FOOD_TIMEOUT_TICKS) {
+                killAura.stopShielding(mod);
+                stopShielding(mod);
+                mod.getBehaviour().setForceFieldPlayers(false);
+                runAwayTask = null;
+                return Float.NEGATIVE_INFINITY;
+            }
             setTask(runAwayTask);
             return cachedLastPriority;
         } else {
             runAwayTask = null;
+        }
+
+        // Low HP and out of food — don't keep fighting, let FoodChain collect food instead.
+        if (!mod.getFoodChain().hasFood() && mod.getPlayer().getHealth() <= 12) {
+            killAura.stopShielding(mod);
+            stopShielding(mod);
+            mod.getBehaviour().setForceFieldPlayers(false);
+            return Float.NEGATIVE_INFINITY;
         }
 
         if (needsChangeOnAttack && lockedOnEntity != null && lockedOnEntity.isAlive()) {

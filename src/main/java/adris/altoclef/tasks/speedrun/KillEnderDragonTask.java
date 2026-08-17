@@ -85,10 +85,15 @@ public class KillEnderDragonTask extends Task {
 
         // Collect the following if dropped:
         // - Diamond Sword
-        // - Diamond Armor
+        // - Diamond Armor (only pieces we don't already have equipped)
         // - Food (List)
 
-        List<Item> toPickUp = new ArrayList<>(Arrays.asList(Items.DIAMOND_SWORD, Items.DIAMOND_BOOTS, Items.DIAMOND_LEGGINGS, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_HELMET));
+        List<Item> toPickUp = new ArrayList<>(List.of(Items.DIAMOND_SWORD));
+        for (Item armor : ItemHelper.DIAMOND_ARMORS) {
+            if (!StorageHelper.isArmorEquipped(armor)) {
+                toPickUp.add(armor);
+            }
+        }
         if (StorageHelper.calculateInventoryFoodScore() < 10) {
             toPickUp.addAll(Arrays.asList(
                     Items.BREAD, Items.COOKED_BEEF, Items.COOKED_CHICKEN, Items.COOKED_MUTTON, Items.COOKED_RABBIT, Items.COOKED_PORKCHOP

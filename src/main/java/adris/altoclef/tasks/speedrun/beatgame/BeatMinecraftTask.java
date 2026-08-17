@@ -476,11 +476,16 @@ public class BeatMinecraftTask extends Task {
             for (Item item : importantItems) {
                 if (item == Items.IRON_PICKAXE && mod1.getItemStorage().hasItem(Items.DIAMOND_PICKAXE)) continue;
 
-                if (!mod1.getItemStorage().hasItem(item) && mod1.getEntityTracker().itemDropped(item)) {
-                    pair.setLeft(new PickupDroppedItemTask(item, 1));
-                    pair.setRight(8000d);
+                if (!mod1.getItemStorage().hasItem(item)) {
+                    // Don't pick up armor we're already wearing.
+                    if (item instanceof ArmorItem && StorageHelper.isArmorEquipped(item)) continue;
 
-                    return pair;
+                    if (mod1.getEntityTracker().itemDropped(item)) {
+                        pair.setLeft(new PickupDroppedItemTask(item, 1));
+                        pair.setRight(8000d);
+
+                        return pair;
+                    }
                 }
             }
 
